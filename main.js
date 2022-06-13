@@ -13,6 +13,7 @@ var curPlayer=0;
 var boxColor = ['rgba(0, 0, 255, 0.5)','rgba(255, 0, 0, 0.5)'];
 var lineColor = ['rgb(0, 0, 255)','rgb(255, 0, 0)'];
 var filled = []
+var ai = localStorage.getItem('ai');
 var game = $('#game');
 for (let i = 0; i <= rows; i++) {
 
@@ -139,14 +140,62 @@ function rightBox(id)
 
 
 // 2. Draw line ( and Box if needed)
-function drawLine(id, player)
-{
-	$('#'+id).css('background-color',lineColor[player]);
-}
 
 function drawBox(id, player)
 {
 	$('#'+id).css('background-color',boxColor[player]);
+}
+
+
+function drawLine(id, player)
+{
+	$('#'+id).css('background-color',lineColor[player]);
+	filled[id]=1;		
+
+	if(id.charAt(0)=='v')
+	{
+		if(leftBox(id))
+		{
+			var c = id.charAt(2);
+			c--;
+			tmpid = id.replaceAt(0,'b');
+			tmpid = tmpid.replaceAt(2,c.toString());
+			drawBox(tmpid,player);
+			filled[tmpid]=1;
+		}
+		
+		if(rightBox(id))
+		{
+			tmpid = id.replaceAt(0,'b');			
+			drawBox(tmpid,player);
+			filled[tmpid]=1;
+		}
+	}
+	else
+	{
+		filled[id]=1;	
+		if(topBox(id))
+		{
+			var r = id.charAt(1);
+			tmpid = id.replaceAt(0,'b'+(r-1));
+			drawBox(tmpid,player);
+			filled[tmpid]=1;
+		}
+		if(bottomBox(id))
+		{
+			var r = id.charAt(1);
+			tmpid = id.replaceAt(0,'b'+r);
+			drawBox(tmpid,player);
+			filled[tmpid]=1;
+		}
+	
+	}
+
+	if(winnercheck(player))
+	{
+		alert('winner is '+player);
+		document.location.reload();
+	}
 }
 
 var hline = $('.h-line');
@@ -161,38 +210,58 @@ hline.hover(function()
 });
 
 
+// 3. playAI
+
+function playAI()
+{
+	for(var i=0;i<=rows;i++)
+	{
+		for(var j=0;j<cols;j++)
+		{
+			var id = 'h'+i+j;
+			if(!filled['h'+i+j])
+			{
+				drawLine(id,1);
+				return;
+			}
+		}		
+	}
+
+	for(var i=0;i<rows;i++)
+	{
+		for(var j=0;j<=cols;j++)
+		{
+			var id = 'v'+i+j;
+			if(!filled['v'+i+j])
+			{
+				drawLine(id,1);
+				return;
+			}
+		}		
+	}
+}
+
+
 for (const line of hline) {
 	line.addEventListener('click', (e) => {
 
 		var id = (e.target.id);
 		if(filled[id])
 		{
-			return;
+			return ;
 		}
 		drawLine(id,curPlayer);
-		filled[id]=1;
-		
-		if(topBox(id))
+		console.log(ai,curPlayer);
+		if(ai=='true')
 		{
-			var r = id.charAt(1);
-			id = id.replaceAt(0,'b'+(r-1));
-			drawBox(id,curPlayer);
+			console.log('h');
+			playAI();			
 		}
-		var id = (e.target.id);
-		if(bottomBox(id))
+		else
 		{
-			var r = id.charAt(1);
-			id = id.replaceAt(0,'b'+r);
-			drawBox(id,curPlayer);
+			curPlayer=(curPlayer+1)%2;
+			$('#current').text(curPlayer);
 		}
-
-		if(winnercheck(curPlayer))
-		{
-			alert('winner is '+curPlayer);
-			document.location.reload();
-		}
-		curPlayer=(curPlayer+1)%2;
-		$('#current').text(curPlayer);
 
 	});	
 }
@@ -217,30 +286,17 @@ for (const line of vline) {
 			return;
 		}
 		drawLine(id,curPlayer);
-		filled[id]=1;		
-
-		if(leftBox(id))
+		
+		if(ai=='true')
 		{
-			var c = id.charAt(2);
-			c--;
-			id = id.replaceAt(0,'b');
-			id = id.replaceAt(2,c.toString());
-			drawBox(id,curPlayer);
+			playAI();
+			return;
 		}
-		var id = (e.target.id);
-		if(rightBox(id))
+		else
 		{
-			id = id.replaceAt(0,'b');			
-			drawBox(id,curPlayer);
+			curPlayer=(curPlayer+1)%2;
+			$('#current').text(curPlayer);
 		}
-
-		if(winnercheck(curPlayer))
-		{
-			alert('winner is '+curPlayer);
-			document.location.reload();
-		}
-		curPlayer=(curPlayer+1)%2;
-		$('#current').text(curPlayer);
 
 	});
 }
@@ -265,14 +321,22 @@ function winnercheck(player)
 
 
 // 4. New Game
-var newGameTypes = $('.dropdown-menu li a');
+var newGameTypes = $('.dropdown-menu > li > a');
 for(const type of newGameTypes)
 {
 	type.addEventListener('click',()=>{
-	document.location.reload();
+		document.location.reload();
+		if(type.text=='VS AI')
+		{
+			localStorage.setItem("ai", 'true');
+
+		}
+		else
+		{
+			localStorage.setItem("ai", 'false');
+		}
 	});
 };
-
 
 $('#current').text(curPlayer);
 
