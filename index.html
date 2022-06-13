@@ -14,11 +14,18 @@
 
 	<header>
 		<h1>Dots and Boxes</h1>
-		<div class="d-flex">
-			<button class="btn">vs Friend</button>
-			<button class="btn">vs AI</button>
+
+		<div class="btn-group">
+			<button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown"
+				aria-expanded="false">
+				New Game
+			</button>
+			<ul class="dropdown-menu">
+				<li><a class="dropdown-item" href="#">VS Friend</a></li>
+				<li><a class="dropdown-item" href="#">VS AI</a></li>
+			</ul>
 		</div>
-	</header>
+		</header>
 
 	<div class="main d-flex justify-content-center">
 
@@ -27,7 +34,7 @@
 		</div>
 
 		<div class="info">
-			<button class="btn help">Help</button>
+			<button class="btn btn-outline-secondary help">Help</button>
 			<p>Current Player : </p>
 		</div>
 
