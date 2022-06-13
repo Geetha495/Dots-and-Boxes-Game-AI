@@ -12,7 +12,7 @@ var cols = 2;
 var curPlayer=0;
 var boxColor = ['rgba(0, 0, 255, 0.5)','rgba(255, 0, 0, 0.5)'];
 var lineColor = ['rgb(0, 0, 255)','rgb(255, 0, 0)'];
-
+var filled = []
 var game = $('#game');
 for (let i = 0; i <= rows; i++) {
 
@@ -165,7 +165,12 @@ for (const line of hline) {
 	line.addEventListener('click', (e) => {
 
 		var id = (e.target.id);
+		if(filled[id])
+		{
+			return;
+		}
 		drawLine(id,curPlayer);
+		filled[id]=1;
 		
 		if(topBox(id))
 		{
@@ -207,7 +212,12 @@ vline.hover(function()
 for (const line of vline) {
 	line.addEventListener('click', (e) => {
 		var id = (e.target.id);	
+		if(filled[id])
+		{
+			return;
+		}
 		drawLine(id,curPlayer);
+		filled[id]=1;		
 
 		if(leftBox(id))
 		{
