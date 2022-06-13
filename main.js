@@ -7,8 +7,8 @@ $(document).ready(()=>
 {
 
 // GAME BOARD
-var rows = 4;
-var cols = 4;
+var rows = 2;
+var cols = 2;
 var curPlayer=0;
 var boxColor = ['rgba(0, 0, 255, 0.5)','rgba(255, 0, 0, 0.5)'];
 var lineColor = ['rgb(0, 0, 255)','rgb(255, 0, 0)'];
@@ -181,8 +181,14 @@ for (const line of hline) {
 			drawBox(id,curPlayer);
 		}
 
-		winnercheck(curPlayer);
+		if(winnercheck(curPlayer))
+		{
+			alert('winner is '+curPlayer);
+			document.location.reload();
+		}
 		curPlayer=(curPlayer+1)%2;
+		$('#current').text(curPlayer);
+
 	});	
 }
 
@@ -218,8 +224,14 @@ for (const line of vline) {
 			drawBox(id,curPlayer);
 		}
 
-		winnercheck(curPlayer);
+		if(winnercheck(curPlayer))
+		{
+			alert('winner is '+curPlayer);
+			document.location.reload();
+		}
 		curPlayer=(curPlayer+1)%2;
+		$('#current').text(curPlayer);
+
 	});
 }
 
@@ -251,5 +263,7 @@ for(const type of newGameTypes)
 	});
 };
 
+
+$('#current').text(curPlayer);
 
 });
