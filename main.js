@@ -311,7 +311,7 @@ function findEmpty()
 
 // MiniMax
 
-function miniMax(player)
+function miniMax(player,alpha,beta,depth)
 {
 	var empty=findEmpty();
 	if(empty.length==0) // no more moves - leaf (move=[-1,-1])
@@ -347,7 +347,7 @@ function miniMax(player)
 	var bonus=0;
 	var marked=[];
 
-	
+	try{
 	empty.forEach(line => {
 		// console.log(filled);
 		
@@ -402,11 +402,13 @@ function miniMax(player)
 				res['move']=line;
 			}
 			bonus--;
-			return;
+			depth++;
+			return;	// continue	
 			
 		}
 
-		var res2 = miniMax(1-player);
+		// console.log(filled);
+		var res2 = miniMax(1-player,alpha,beta,1+depth);
 		res2['move']=line;
 
 		//Backtrack
@@ -419,27 +421,40 @@ function miniMax(player)
 			// console.log(element);
 		});
 		marked=[];
-
-		// console.log(filled);
+		
 
 		if(player==1)//ai
 		{
+			res2['score']-=depth;
 			if(res2['score']>best['score'])
 			{
 				best = res2; //maximmizes
 			}
+			alpha = Math.max(alpha,best['score']);
+			if(alpha>=beta)
+				throw 'ended';
 		}
 		else
 		{
+			res2['score']+=depth;
 			if(res2['score']<best['score'])
 			{
 				best = res2; //minimmizes
 			}
+			beta = Math.min(beta,best['score']);
+
+			if(alpha>=beta)
+				throw 'ended';
 		}
 
-	});
+	})
+	} catch(e)
+	{
+		console.log(e);
+		if(e!='ended')
+			throw e;
+	}
 	
-
 	marked.forEach(element => {
 			filled[element]=0;
 			if(element.charAt(0)=='b')
@@ -455,7 +470,6 @@ function miniMax(player)
 
 	return best;
 
-	
 }
 
 
@@ -463,7 +477,7 @@ function miniMax(player)
 
 function playAI()
 {
-	var nextMove = miniMax(1);
+	var nextMove = miniMax(1,-1000,+1000,0);
 	console.log(nextMove);
 	
 	if(nextMove['move']=='[-1,-1]')
@@ -480,9 +494,7 @@ function playAI()
 	{
 		extra[1]--;
 		playAI();
-	}
-
-	
+	}	
 }
 
 
@@ -497,7 +509,6 @@ vline.hover(function()
 });
 
 var alllines = [hline,vline];
-
 
 for (const lines of alllines) {
  for(const line of lines)
@@ -527,8 +538,7 @@ for (const lines of alllines) {
 			if(declareWinner(1))
 			{
 				return;
-			}
-			
+			}			
 		}
 		
 		{
