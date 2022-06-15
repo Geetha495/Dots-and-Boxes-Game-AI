@@ -13,6 +13,7 @@ var curPlayer=0;
 var boxColor = ['rgba(0, 0, 255, 0.5)','rgba(255, 0, 0, 0.5)'];
 var lineColor = ['rgb(0, 0, 255)','rgb(255, 0, 0)'];
 var filled = []
+var extra = [0,0];
 var ai = localStorage.getItem('ai');
 var game = $('#game');
 for (let i = 0; i <= rows; i++) {
@@ -178,10 +179,31 @@ function drawBox(id, player)
 }
 
 
+
+function declareWinner(player)
+{
+	var win = winnercheck(player);
+	if(win==-1)
+	{
+		alert('Its a DRAW');
+		document.location.reload();
+		return 1;
+	}
+	else if(win)
+	{
+		alert('winner is '+player);
+		document.location.reload();
+		return 1;
+	}
+}
+
+
 function drawLine(id, player)
 {
 	$('#'+id).css('background-color',lineColor[player]);
 	filled[id]=(player==0?-1:1);
+	
+	var bonus = 0;
 	
 	if(id.charAt(0)=='v')
 	{
@@ -190,6 +212,7 @@ function drawLine(id, player)
 			var tmpid = getLeftBoxId(id);
 			drawBox(tmpid,player);
 			filled[tmpid]=(player==0?-1:1);
+			bonus++;
 		}
 		
 		if(rightBox(id))
@@ -197,6 +220,7 @@ function drawLine(id, player)
 			var tmpid = getRightBoxId(id);			
 			drawBox(tmpid,player);
 			filled[tmpid]=(player==0?-1:1);
+			bonus++;
 		}
 	}
 	else
@@ -206,27 +230,21 @@ function drawLine(id, player)
 			var tmpid = getTopBoxId(id);
 			drawBox(tmpid,player);
 			filled[tmpid]=(player==0?-1:1);
+			bonus++;
 		}
 		if(bottomBox(id))
 		{
 			var tmpid = getBottomBoxId(id);
 			drawBox(tmpid,player);
 			filled[tmpid]=(player==0?-1:1);
+			bonus++;
 		}
 	
 	}
 
-	var win = winnercheck(player);
-	if(win==-1)
-	{
-		alert('Its a DRAW');
-		document.location.reload();
-	}
-	else if(win)
-	{
-		alert('winner is '+player);
-		document.location.reload();
-	}
+	declareWinner(player);
+
+	return bonus;
 }
 
 var hline = $('.h-line');
@@ -410,7 +428,12 @@ for (const lines of alllines) {
 		{
 			return;
 		}
-		drawLine(id,curPlayer);
+		extra[curPlayer] += drawLine(id,curPlayer);
+		if(extra[curPlayer])
+		{
+			extra[curPlayer]--;
+			return;
+		}
 		
 		if(ai=='true')
 		{
