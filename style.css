@@ -22,7 +22,11 @@ header
 }
 
 #game{
-	min-width: 300px;
+	margin-right: 20px;
+	padding: 20px;
+	min-width: 100px;
+	border: 10px solid transparent;
+	border-image: url('https://picsum.photos/300') 20 round;
 }
 
 .dot {
