@@ -7,8 +7,8 @@ $(document).ready(()=>
 {
 
 // GAME BOARD
-var rows = 3;
-var cols = 3;
+var rows = 1;
+var cols = 2;
 var curPlayer=0;
 var boxColor = ['rgba(0, 0, 255, 0.5)','rgba(255, 0, 0, 0.5)'];
 var lineColor = ['rgb(0, 0, 255)','rgb(255, 0, 0)'];
@@ -65,15 +65,22 @@ function topBox(id)
 		return 0;
 
 	r--;
-	var left = $('#v'+r+c).css('background-color')=='rgba(0, 0, 0, 0)';
-	var top = $('#h'+r+c).css('background-color')=='rgba(0, 0, 0, 0)';
+	var left = !filled['v'+r+c];
+	var top =  !filled['h'+r+c];
 	c++;
-	var right = $('#v'+r+c).css('background-color')=='rgba(0, 0, 0, 0)';
+	var right = !filled['v'+r+c];
 	
 	if(left || right || top)
 		return 0;
 
 	return 1;
+}
+
+function getTopBoxId(id)
+{
+	var r = id.charAt(1);
+	var tmpid = id.replaceAt(0,'b'+(r-1));
+	return tmpid;
 }
 
 
@@ -85,17 +92,24 @@ function bottomBox(id)
 	if((r-'0')==rows)
 		return 0;
 	
-	var left = $('#v'+r+c).css('background-color')=='rgba(0, 0, 0, 0)';
+	var left =  !filled['v'+r+c];
 	r++;
-	var bottom = $('#h'+r+c).css('background-color')=='rgba(0, 0, 0, 0)';
+	var bottom = !filled['h'+r+c];
 	c++;
 	r--;
-	var right = $('#v'+r+c).css('background-color')=='rgba(0, 0, 0, 0)';
+	var right = !filled['v'+r+c];
 	
 	if(left || right || bottom)
 		return 0;
 
 	return 1;
+}
+
+function getBottomBoxId(id)
+{
+	var r = id.charAt(1);
+	var tmpid = id.replaceAt(0,'b'+r);
+	return tmpid;
 }
 
 
@@ -108,10 +122,10 @@ function leftBox(id)
 		return 0;
 
 	c--;
-	var top = $('#h'+r+c).css('background-color')=='rgba(0, 0, 0, 0)';
-	var left = $('#v'+r+c).css('background-color')=='rgba(0, 0, 0, 0)';
+	var top =  !filled['h'+r+c];
+	var left =  !filled['v'+r+c];
 	r++;
-	var bottom = $('#h'+r+c).css('background-color')=='rgba(0, 0, 0, 0)';
+	var bottom =  !filled['h'+r+c];
 	
 	if(bottom || left || top)
 		return 0;
@@ -119,6 +133,15 @@ function leftBox(id)
 	return 1;
 }
 
+function getLeftBoxId(id)
+{
+	var c = id.charAt(2);
+	c--;
+	var tmpid = id.replaceAt(0,'b');
+	tmpid = tmpid.replaceAt(2,c.toString());
+	return tmpid;
+			
+}
 
 function rightBox(id)
 {
@@ -128,12 +151,12 @@ function rightBox(id)
 	if((c-'0')==(cols))
 		return 0;
 
-	var top = $('#h'+r+c).css('background-color')=='rgba(0, 0, 0, 0)';
+	var top = !filled['h'+r+c];
 	r++;			
-	var bottom = $('#h'+r+c).css('background-color')=='rgba(0, 0, 0, 0)';
+	var bottom = !filled['h'+r+c];
 	c++;
 	r--;
-	var right = $('#v'+r+c).css('background-color')=='rgba(0, 0, 0, 0)';
+	var right = !filled['v'+r+c];
 
 	if(top || right || bottom)
 		return 0;
@@ -141,6 +164,11 @@ function rightBox(id)
 	return 1;
 }
 
+function getRightBoxId(id)
+{
+	var tmpid = id.replaceAt(0,'b');
+	return tmpid;	
+}
 
 // 2. Draw line ( and Box if needed)
 
@@ -153,43 +181,37 @@ function drawBox(id, player)
 function drawLine(id, player)
 {
 	$('#'+id).css('background-color',lineColor[player]);
-	filled[id]=1;		
-
+	filled[id]=(player==0?-1:1);
+	
 	if(id.charAt(0)=='v')
 	{
 		if(leftBox(id))
 		{
-			var c = id.charAt(2);
-			c--;
-			tmpid = id.replaceAt(0,'b');
-			tmpid = tmpid.replaceAt(2,c.toString());
+			var tmpid = getLeftBoxId(id);
 			drawBox(tmpid,player);
-			filled[tmpid]=1;
+			filled[tmpid]=(player==0?-1:1);
 		}
 		
 		if(rightBox(id))
 		{
-			tmpid = id.replaceAt(0,'b');			
+			var tmpid = getRightBoxId(id);			
 			drawBox(tmpid,player);
-			filled[tmpid]=1;
+			filled[tmpid]=(player==0?-1:1);
 		}
 	}
 	else
-	{
-		filled[id]=1;	
+	{	
 		if(topBox(id))
 		{
-			var r = id.charAt(1);
-			tmpid = id.replaceAt(0,'b'+(r-1));
+			var tmpid = getTopBoxId(id);
 			drawBox(tmpid,player);
-			filled[tmpid]=1;
+			filled[tmpid]=(player==0?-1:1);
 		}
 		if(bottomBox(id))
 		{
-			var r = id.charAt(1);
-			tmpid = id.replaceAt(0,'b'+r);
+			var tmpid = getBottomBoxId(id);
 			drawBox(tmpid,player);
-			filled[tmpid]=1;
+			filled[tmpid]=(player==0?-1:1);
 		}
 	
 	}
@@ -219,19 +241,18 @@ hline.hover(function()
 });
 
 
-// 3. playAI
-
-function playAI()
+function findEmpty()
 {
+	var empty=[];
+
 	for(var i=0;i<=rows;i++)
 	{
 		for(var j=0;j<cols;j++)
 		{
 			var id = 'h'+i+j;
-			if(!filled['h'+i+j])
+			if(!filled[id])
 			{
-				drawLine(id,1);
-				return;
+				empty.push(id);
 			}
 		}		
 	}
@@ -241,36 +262,129 @@ function playAI()
 		for(var j=0;j<=cols;j++)
 		{
 			var id = 'v'+i+j;
-			if(!filled['v'+i+j])
+			if(!filled[id])
 			{
-				drawLine(id,1);
-				return;
+				empty.push(id);
 			}
 		}		
 	}
+	return empty;
 }
 
+// MiniMax
 
-for (const line of hline) {
-	line.addEventListener('click', (e) => {
-
-		var id = (e.target.id);
-		if(filled[id])
+function miniMax(player)
+{
+	var empty=findEmpty();
+	if(empty.length==0) // no more moves - leaf (move=[-1,-1])
+	{
+		var win = winnercheck(player);
+		if(win==-1) // draw
 		{
-			return ;
+			return {'move':'[-1,-1]','score':0};// score=0
 		}
-		drawLine(id,curPlayer);
-		if(ai=='true')
+		else if(win==1 && player==1) // ai won
 		{
-			playAI();			
+			return {'move':'[-1,-1]','score':1};
 		}
 		else
 		{
-			curPlayer=(curPlayer+1)%2;
-			$('#current').text(curPlayer);
+			return {'move':'[-1,-1]','score':-1};
+		}
+	}
+
+
+	var best ;
+	if(player==1) // ai
+	{
+		best= {'move':'[-1,-1]','score':-10000};
+	}
+	else
+	{
+		best = {'move':'[-1,-1]','score':+10000};
+	}
+
+	empty.forEach(line => {
+
+		// console.log(filled);
+		var marked=[];
+		filled[line] = (player==0?-1:1);
+		marked.push(line);
+		if(line[0]=='h')
+		{
+			if(topBox(line))
+			{
+				var tmpid = getTopBoxId(line);
+				filled[tmpid]=(player==0?-1:1);
+				marked.push(tmpid);
+			}
+			if(bottomBox(line))
+			{
+				var tmpid = getBottomBoxId(line);
+				filled[tmpid]=(player==0?-1:1);
+				marked.push(tmpid);
+			}			
+		}
+		else if(line[0]=='v')
+		{
+			if(leftBox(line))
+			{
+				var tmpid = getLeftBoxId(line);
+				filled[tmpid]=(player==0?-1:1);
+				marked.push(tmpid);
+			}
+			
+			if(rightBox(line))
+			{
+				var tmpid = getRightBoxId(line);	
+				filled[tmpid]=(player==0?-1:1);
+				marked.push(tmpid);
+			}
 		}
 
-	});	
+
+
+		var res = miniMax(1-player);
+		res['move']=line;
+
+		//Backtrack
+		marked.forEach(element => {
+			filled[element]=0;
+			// console.log(element);
+		});
+
+		// console.log(filled);
+
+		if(player==1)//ai
+		{
+			if(res['score']>best['score'])
+			{
+				best = res; //maximmizes
+			}
+		}
+		else
+		{
+			if(res['score']<best['score'])
+			{
+				best = res; //minimmizes
+			}
+		}
+
+	});
+
+	return best;
+
+	
+}
+
+
+// 3. playAI
+
+function playAI()
+{
+	var nextMove = miniMax(1);
+	console.log(nextMove);
+	drawLine(nextMove['move'],1);
 }
 
 
@@ -284,8 +398,12 @@ vline.hover(function()
 	$(this).removeClass('hover'+curPlayer);
 });
 
+var alllines = [hline,vline];
 
-for (const line of vline) {
+
+for (const lines of alllines) {
+ for(const line of lines)
+{
 	line.addEventListener('click', (e) => {
 		var id = (e.target.id);	
 		if(filled[id])
@@ -307,24 +425,32 @@ for (const line of vline) {
 
 	});
 }
+}
 
 
 // 3. Check Winner
 function winnercheck(player)
 {
-	var cur=0,other=0;;
+	var cur=0,other=0;
+	if(player==0)
+		player = -1;
 	for(var i=0;i < rows; i++)
 	{
-		for(var j=0;j<=cols;j++)
+		for(var j=0;j<cols;j++)
 		{
-			var filled = $('#b'+i+j).css('background-color') == boxColor[player];
-			if(filled)
+			if(filled['b'+i+j]==0)
+			{
+				continue;
+			}
+			if(filled['b'+i+j]==player)
 				cur++;	
-			filled = $('#b'+i+j).css('background-color') == boxColor[1-player];
-			if(filled)
-				other++;	
+			else if(filled['b'+i+j]==(-player))
+				other++;
+				
 		}
 	}
+
+	console.log(cur,other);
 	if((cur == other) && ((cur+other)==rows*cols) )
 	{
 		return -1;
