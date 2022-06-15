@@ -7,7 +7,7 @@ $(document).ready(()=>
 {
 
 // GAME BOARD
-var rows = 1;
+var rows = 2;
 var cols = 2;
 var curPlayer=0;
 var boxColor = ['rgba(0, 0, 255, 0.5)','rgba(255, 0, 0, 0.5)'];
@@ -185,13 +185,13 @@ function declareWinner(player)
 	var win = winnercheck(player);
 	if(win==-1)
 	{
-		alert('Its a DRAW');
+		setTimeout(function () { alert('Its a DRAW'); }, 1);
 		document.location.reload();
 		return 1;
 	}
 	else if(win)
 	{
-		alert('winner is '+player);
+		setTimeout(function () { alert('winner is '+player); }, 1);
 		document.location.reload();
 		return 1;
 	}
@@ -242,7 +242,8 @@ function drawLine(id, player)
 	
 	}
 
-	declareWinner(player);
+	if(declareWinner(player))
+		return 0;
 
 	return bonus;
 }
@@ -312,20 +313,26 @@ function miniMax(player)
 	}
 
 
-	var best ;
+	var best,res,frst=1 ;
 	if(player==1) // ai
 	{
-		best= {'move':'[-1,-1]','score':-10000};
+		best= {'move':'[-1,-1]','score':-1000};
+		res= {'move':'[-1,-1]','score':+10};
 	}
 	else
 	{
-		best = {'move':'[-1,-1]','score':+10000};
+		best = {'move':'[-1,-1]','score':+1000};
+		res = {'move':'[-1,-1]','score':-10};
 	}
 
-	empty.forEach(line => {
+	var bonus=0;
+	var marked=[];
 
+	
+	empty.forEach(line => {
 		// console.log(filled);
-		var marked=[];
+		
+		// var excess =0;
 		filled[line] = (player==0?-1:1);
 		marked.push(line);
 		if(line[0]=='h')
@@ -335,12 +342,14 @@ function miniMax(player)
 				var tmpid = getTopBoxId(line);
 				filled[tmpid]=(player==0?-1:1);
 				marked.push(tmpid);
+				bonus++;
 			}
 			if(bottomBox(line))
 			{
 				var tmpid = getBottomBoxId(line);
 				filled[tmpid]=(player==0?-1:1);
 				marked.push(tmpid);
+				bonus++;
 			}			
 		}
 		else if(line[0]=='v')
@@ -350,6 +359,7 @@ function miniMax(player)
 				var tmpid = getLeftBoxId(line);
 				filled[tmpid]=(player==0?-1:1);
 				marked.push(tmpid);
+				bonus++;
 			}
 			
 			if(rightBox(line))
@@ -357,13 +367,24 @@ function miniMax(player)
 				var tmpid = getRightBoxId(line);	
 				filled[tmpid]=(player==0?-1:1);
 				marked.push(tmpid);
+				bonus++;
 			}
 		}
 
+		if(bonus>0)
+		{
+			if(frst==1)
+			{
+				frst=0;
+				res['move']=line;
+			}
+			bonus--;
+			return;
+			
+		}
 
-
-		var res = miniMax(1-player);
-		res['move']=line;
+		var res2 = miniMax(1-player);
+		res2['move']=line;
 
 		//Backtrack
 		marked.forEach(element => {
@@ -375,20 +396,29 @@ function miniMax(player)
 
 		if(player==1)//ai
 		{
-			if(res['score']>best['score'])
+			if(res2['score']>best['score'])
 			{
-				best = res; //maximmizes
+				best = res2; //maximmizes
 			}
 		}
 		else
 		{
-			if(res['score']<best['score'])
+			if(res2['score']<best['score'])
 			{
-				best = res; //minimmizes
+				best = res2; //minimmizes
 			}
 		}
 
 	});
+	
+
+	marked.forEach(element => {
+			filled[element]=0;
+			// console.log(element);
+		});
+
+	if(res['move']!='[-1,-1]')
+		return res;
 
 	return best;
 
@@ -402,7 +432,21 @@ function playAI()
 {
 	var nextMove = miniMax(1);
 	console.log(nextMove);
-	drawLine(nextMove['move'],1);
+	if(nextMove['move']=='[-1,-1]')
+		return;
+	if(declareWinner(1))
+	{
+		return;
+	}
+	extra[1] += drawLine(nextMove['move'],1);
+	
+	if(extra[1])
+	{
+		extra[1]--;
+		playAI();
+	}
+
+	curPlayer=(1-curPlayer);
 }
 
 
@@ -429,6 +473,10 @@ for (const lines of alllines) {
 			return;
 		}
 		extra[curPlayer] += drawLine(id,curPlayer);
+		if(declareWinner(curPlayer))
+		{
+			return;
+		}
 		if(extra[curPlayer])
 		{
 			extra[curPlayer]--;
@@ -438,14 +486,13 @@ for (const lines of alllines) {
 		if(ai=='true')
 		{
 			playAI();
-			return;
+			
 		}
-		else
+		
 		{
-			curPlayer=(curPlayer+1)%2;
+			curPlayer=(1-curPlayer);
 			$('#current').text(curPlayer);
 		}
-
 	});
 }
 }
