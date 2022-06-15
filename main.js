@@ -14,6 +14,7 @@ var boxColor = ['rgba(0, 0, 255, 0.5)','rgba(255, 0, 0, 0.5)'];
 var lineColor = ['rgb(0, 0, 255)','rgb(255, 0, 0)'];
 var filled = []
 var extra = [0,0];
+var filledBoxes=[0,0];
 var ai = localStorage.getItem('ai');
 var game = $('#game');
 for (let i = 0; i <= rows; i++) {
@@ -172,12 +173,25 @@ function getRightBoxId(id)
 }
 
 // 2. Draw line ( and Box if needed)
-
 function drawBox(id, player)
 {
 	$('#'+id).css('background-color',boxColor[player]);
 }
 
+
+// 3. Check Winner
+function winnercheck(player)
+{
+	// var cur=0,other=0;
+	var cur = filledBoxes[player], other = filledBoxes[1-player];
+	console.log(cur,other);
+	if((cur == other) && ((cur+other)==rows*cols) )
+	{
+		return -1;
+	}
+	return cur>(rows*cols)/2;
+
+}
 
 
 function declareWinner(player)
@@ -212,6 +226,7 @@ function drawLine(id, player)
 			var tmpid = getLeftBoxId(id);
 			drawBox(tmpid,player);
 			filled[tmpid]=(player==0?-1:1);
+			filledBoxes[player]++;
 			bonus++;
 		}
 		
@@ -220,6 +235,7 @@ function drawLine(id, player)
 			var tmpid = getRightBoxId(id);			
 			drawBox(tmpid,player);
 			filled[tmpid]=(player==0?-1:1);
+			filledBoxes[player]++;
 			bonus++;
 		}
 	}
@@ -230,6 +246,7 @@ function drawLine(id, player)
 			var tmpid = getTopBoxId(id);
 			drawBox(tmpid,player);
 			filled[tmpid]=(player==0?-1:1);
+			filledBoxes[player]++;
 			bonus++;
 		}
 		if(bottomBox(id))
@@ -237,6 +254,7 @@ function drawLine(id, player)
 			var tmpid = getBottomBoxId(id);
 			drawBox(tmpid,player);
 			filled[tmpid]=(player==0?-1:1);
+			filledBoxes[player]++;
 			bonus++;
 		}
 	
@@ -247,6 +265,7 @@ function drawLine(id, player)
 
 	return bonus;
 }
+
 
 var hline = $('.h-line');
 
@@ -304,11 +323,11 @@ function miniMax(player)
 		}
 		else if(win==1 && player==1) // ai won
 		{
-			return {'move':'[-1,-1]','score':1};
+			return {'move':'[-1,-1]','score':10};
 		}
 		else
 		{
-			return {'move':'[-1,-1]','score':-1};
+			return {'move':'[-1,-1]','score':-10};
 		}
 	}
 
@@ -342,6 +361,7 @@ function miniMax(player)
 				var tmpid = getTopBoxId(line);
 				filled[tmpid]=(player==0?-1:1);
 				marked.push(tmpid);
+				filledBoxes[player]++;
 				bonus++;
 			}
 			if(bottomBox(line))
@@ -349,6 +369,7 @@ function miniMax(player)
 				var tmpid = getBottomBoxId(line);
 				filled[tmpid]=(player==0?-1:1);
 				marked.push(tmpid);
+				filledBoxes[player]++;
 				bonus++;
 			}			
 		}
@@ -359,6 +380,7 @@ function miniMax(player)
 				var tmpid = getLeftBoxId(line);
 				filled[tmpid]=(player==0?-1:1);
 				marked.push(tmpid);
+				filledBoxes[player]++;
 				bonus++;
 			}
 			
@@ -367,6 +389,7 @@ function miniMax(player)
 				var tmpid = getRightBoxId(line);	
 				filled[tmpid]=(player==0?-1:1);
 				marked.push(tmpid);
+				filledBoxes[player]++;
 				bonus++;
 			}
 		}
@@ -389,8 +412,13 @@ function miniMax(player)
 		//Backtrack
 		marked.forEach(element => {
 			filled[element]=0;
+			if(element.charAt(0)=='b')
+			{
+				filledBoxes[player]--;
+			}
 			// console.log(element);
 		});
+		marked=[];
 
 		// console.log(filled);
 
@@ -414,8 +442,13 @@ function miniMax(player)
 
 	marked.forEach(element => {
 			filled[element]=0;
+			if(element.charAt(0)=='b')
+			{
+				filledBoxes[player]--;
+			}
 			// console.log(element);
 		});
+		marked=[];
 
 	if(res['move']!='[-1,-1]')
 		return res;
@@ -432,12 +465,15 @@ function playAI()
 {
 	var nextMove = miniMax(1);
 	console.log(nextMove);
+	
 	if(nextMove['move']=='[-1,-1]')
 		return;
+	
 	if(declareWinner(1))
 	{
 		return;
 	}
+
 	extra[1] += drawLine(nextMove['move'],1);
 	
 	if(extra[1])
@@ -446,7 +482,7 @@ function playAI()
 		playAI();
 	}
 
-	curPlayer=(1-curPlayer);
+	
 }
 
 
@@ -485,7 +521,13 @@ for (const lines of alllines) {
 		
 		if(ai=='true')
 		{
+			curPlayer=(1-curPlayer);
+			$('#current').text(curPlayer);
 			playAI();
+			if(declareWinner(1))
+			{
+				return;
+			}
 			
 		}
 		
@@ -497,36 +539,6 @@ for (const lines of alllines) {
 }
 }
 
-
-// 3. Check Winner
-function winnercheck(player)
-{
-	var cur=0,other=0;
-	if(player==0)
-		player = -1;
-	for(var i=0;i < rows; i++)
-	{
-		for(var j=0;j<cols;j++)
-		{
-			if(filled['b'+i+j]==0)
-			{
-				continue;
-			}
-			if(filled['b'+i+j]==player)
-				cur++;	
-			else if(filled['b'+i+j]==(-player))
-				other++;
-				
-		}
-	}
-
-	console.log(cur,other);
-	if((cur == other) && ((cur+other)==rows*cols) )
-	{
-		return -1;
-	}
-	return cur>(rows*cols)/2;
-}
 
 
 // 4. New Game
