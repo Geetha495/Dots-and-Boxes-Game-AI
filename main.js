@@ -568,6 +568,8 @@ for(const type of newGameTypes)
 		}
 	});
 };
+if(ai=='true')
+	drawLine('h00',1);
 
 $('#current').text(curPlayer);
 
