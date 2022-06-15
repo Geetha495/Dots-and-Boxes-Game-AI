@@ -7,8 +7,8 @@ $(document).ready(()=>
 {
 
 // GAME BOARD
-var rows = 2;
-var cols = 2;
+var rows = 3;
+var cols = 3;
 var curPlayer=0;
 var boxColor = ['rgba(0, 0, 255, 0.5)','rgba(255, 0, 0, 0.5)'];
 var lineColor = ['rgb(0, 0, 255)','rgb(255, 0, 0)'];
@@ -23,7 +23,8 @@ for (let i = 0; i <= rows; i++) {
 
 	var dot = '<div class="dot"></div>';
 	var hline = '<div class="h-line" id="h__"></div>';
-	var vline = '<div class="v-line" id="v__"></div><div class="box" id="b__"></div>';
+	var vline = '<div class="v-line" id="v__"></div>';
+	var box = '<div class="box" id="b__"></div>';
 
 	for (let j = 0; j <= cols; j++) {
 		grid += dot;
@@ -39,8 +40,10 @@ for (let i = 0; i <= rows; i++) {
 		grid += container;
 		for (let j = 0; j <= cols; j++) {
 			vline = vline.replaceAt(25,i+''+j);
-			vline = vline.replaceAt(57,i+''+j);
+			box = box.replaceAt(22,i+''+j);
 			grid += vline;
+			if(j!=cols)
+				grid+=box;
 		}
 		grid += '</div>';
 	}
@@ -191,7 +194,13 @@ function drawLine(id, player)
 	
 	}
 
-	if(winnercheck(player))
+	var win = winnercheck(player);
+	if(win==-1)
+	{
+		alert('Its a DRAW');
+		document.location.reload();
+	}
+	else if(win)
 	{
 		alert('winner is '+player);
 		document.location.reload();
@@ -251,10 +260,8 @@ for (const line of hline) {
 			return ;
 		}
 		drawLine(id,curPlayer);
-		console.log(ai,curPlayer);
 		if(ai=='true')
 		{
-			console.log('h');
 			playAI();			
 		}
 		else
@@ -305,7 +312,7 @@ for (const line of vline) {
 // 3. Check Winner
 function winnercheck(player)
 {
-	var cur=0;
+	var cur=0,other=0;;
 	for(var i=0;i < rows; i++)
 	{
 		for(var j=0;j<=cols;j++)
@@ -313,9 +320,15 @@ function winnercheck(player)
 			var filled = $('#b'+i+j).css('background-color') == boxColor[player];
 			if(filled)
 				cur++;	
+			filled = $('#b'+i+j).css('background-color') == boxColor[1-player];
+			if(filled)
+				other++;	
 		}
 	}
-	console.log(cur);
+	if((cur == other) && ((cur+other)==rows*cols) )
+	{
+		return -1;
+	}
 	return cur>(rows*cols)/2;
 }
 
